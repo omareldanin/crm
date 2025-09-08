@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Permissions {
+  MANAGE_VENDORS
+  MANAGE_ORDERS
+  SEND_NOTIFICATIONS
+  MANAGE_DELIVERIES
+  MANAGE_ADMINS
+  MANAGE_PRODUCTS
+}
+
+enum UserRole {
+  ADMIN
+  ADMIN_ASSISTANT
+  VENDOR
+  DELIVERY
+}
+
+enum NotificationTopic {
+  ADMIN
+  ADMIN_ASSISTANT
+  VENDOR
+  DELIVERY
+  ALL
+}
+
+
+model User {
+  id                Int             @id @default(autoincrement())
+  phone             String          @unique
+  name              String?
+  avatar            String?
+  fcm               String?
+  password          String
+  token             String?
+  refresh_token     String[]
+  role              UserRole
+  notifications     Notification[]
+  deleted           Boolean         @default(false)
+  deletedAt         DateTime?
+  // relations---------------------------------------------------------------------//
+  vendor            Vendor?
+  delivery          Delivery?
+  admin             Admin?
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+model Delivery {
+  id     Int     @id @default(autoincrement())
+  online Boolean @default(false)
+
+  user User @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+model Admin {
+  id              Int               @id @default(autoincrement())
+  permissions     Permissions[]
+  user            User              @relation(fields: [id], references: [id], onDelete: Cascade)
+}
+
+model Vendor {
+  id                Int          @id
+  address           String?
+  longitudes        String?
+  latitude          String?
+  user              User         @relation(fields: [id], references: [id], onDelete: Cascade)
+  //-------------------------------------------------------------------------------
+}
+
+model Notification {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id        Int                @id @default(autoincrement())
+  // --- DETAILS --------------------------------------------------------------------------- //
+  title     String
+  content   String             @default("")
+  topic     NotificationTopic?
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  userId    Int?
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  user      User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // --- STATUS --------------------------------------------------------------------------- //
+  seen      Boolean            @default(false)
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt DateTime           @default(now())
+
+  @@index([userId])
+}
+
+
+
