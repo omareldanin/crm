@@ -7,7 +7,7 @@ import {
   IsPositive,
   IsNotEmpty,
 } from "class-validator";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import { PartialType } from "@nestjs/mapped-types";
 
 export class CreateProductDto {
@@ -29,6 +29,7 @@ export class CreateProductDto {
   @IsOptional()
   price?: number;
 
+  @Transform(({ value }) => value === "true" || value === true) // 👈 string → boolean
   @IsBoolean()
   @IsOptional()
   available?: boolean = true;
