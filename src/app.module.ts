@@ -23,7 +23,7 @@ import { ProductModule } from "./app/product/product.module";
     NotificationModule,
     ProductModule,
   ],
-  controllers: [AppController, ProductController],
+  controllers: [AppController],
   providers: [AppService, ChatGateway],
 })
 export class AppModule {}
