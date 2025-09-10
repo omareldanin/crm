@@ -96,10 +96,7 @@ export class ProductController {
   @UseGuards(JwtAuthGuard)
   @UploadImageInterceptor("image")
   @Post("/categories")
-  async addCategory(
-    @Body() data: CreateCategoryDto,
-    @UploadedFile() file: Express.Multer.File
-  ) {
+  async addCategory(@Body() data: CreateCategoryDto) {
     const category = await this.productService.addCategory(data);
     return { message: "success", category };
   }

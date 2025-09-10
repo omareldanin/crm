@@ -41,8 +41,8 @@ export class CreateProductDto {
 }
 
 export class CreateCategoryDto {
-  @IsJSON()
   @IsString()
+  @IsNotEmpty()
   name: string;
 
   @Type(() => Number)
