@@ -42,7 +42,7 @@ export class ProductController {
       data.image = "uploads/" + file.filename;
     }
 
-    const product = this.productService.create({
+    const product = await this.productService.create({
       data,
       userid: loggedInUser.id,
     });
