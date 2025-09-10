@@ -49,6 +49,7 @@ model User {
   refresh_token     String[]
   role              UserRole
   notifications     Notification[]
+  products          Product[]
   deleted           Boolean         @default(false)
   deletedAt         DateTime?
   // relations---------------------------------------------------------------------//
@@ -58,6 +59,36 @@ model User {
   // --- OTHER --------------------------------------------------------------------- //
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
+}
+
+model Product {
+  id               Int     @id @default(autoincrement())
+  name             String
+  description      String
+  image            String?
+  price            Decimal
+  available        Boolean @default(true)
+  quantity         Int     @default(0)
+  orders           Int     @default(0)
+  categories       ProductCategory[]
+  //---relations------------------------------------------------------------------//
+  createdBy            User?          @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById          Int?
+  // --- OTHER ---------------------------------------------------------------------//
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model ProductCategory{
+  id               Int     @id @default(autoincrement())
+  name             String
+  quantity         Int     @default(0)
+  price            Decimal
+  product          Product?          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId        Int?
+  // --- OTHER ---------------------------------------------------------------------//
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 }
 
 model Delivery {

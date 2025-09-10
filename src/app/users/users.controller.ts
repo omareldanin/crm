@@ -22,7 +22,7 @@ import { UploadImageInterceptor } from "src/middlewares/file-upload.interceptor"
 export class UsersController {
   constructor(private userService: UsersService) {}
 
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @UploadImageInterceptor("avatar")
   @Post("/create-user")
   async create(
