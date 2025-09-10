@@ -64,12 +64,12 @@ model User {
 model Product {
   id               Int     @id @default(autoincrement())
   name             String
-  description      String
+  description      String?
   image            String?
   price            Decimal
   available        Boolean @default(true)
-  quantity         Int     @default(0)
-  orders           Int     @default(0)
+  quantity         Int?     @default(0)
+  orders           Int?     @default(0)
   categories       ProductCategory[]
   //---relations------------------------------------------------------------------//
   createdBy            User?          @relation(fields: [createdById], references: [id], onDelete: Cascade)
