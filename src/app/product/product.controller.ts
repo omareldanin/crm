@@ -72,14 +72,14 @@ export class ProductController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete("/getAll/:id")
+  @Delete("/delete/:id")
   async delete(@Param("id", ParseIntPipe) id: number) {
     await this.productService.delete(id);
     return { message: "success" };
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get()
+  @Get("/getAll")
   async getAll(
     @Query("page") page = "1",
     @Query("size") size = "10",
