@@ -16,7 +16,7 @@ export class ProductService {
       data: {
         name: data.data.name,
         price: data.data.price || 0,
-        quantity: data.data.quantity || 0,
+        quantity: +data.data.quantity || 0,
         image: data.data.image || undefined,
         description: data.data.description,
         available: data.data.available,
