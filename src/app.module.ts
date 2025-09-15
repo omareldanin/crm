@@ -9,9 +9,8 @@ import { UsersModule } from "./app/users/users.module";
 import { NotificationModule } from "./app/notification/notification.module";
 
 import { ChatGateway } from "./order.gateway";
-import { ProductController } from "./app/product/product.controller";
 import { ProductModule } from "./app/product/product.module";
-import { CartModule } from './cart/cart.module';
+import { CartModule } from "./app/cart/cart.module";
 
 @Module({
   imports: [
