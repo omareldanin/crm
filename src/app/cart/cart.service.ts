@@ -98,8 +98,12 @@ export class CartService {
           },
         },
         quantity: +data.quantity,
-        subtotal: +product.price,
-        total: +product.price * +data.quantity,
+        subtotal: data.categoryId
+          ? +product.categories[0].price
+          : +product.price,
+        total: data.categoryId
+          ? +product.categories[0].price * +data.quantity
+          : +product.price * +data.quantity,
         category: data.categoryId
           ? {
               connect: {
@@ -318,8 +322,12 @@ export class CartService {
       },
       data: {
         quantity: +data.quantity,
-        subtotal: +cartProduct.product.price,
-        total: +cartProduct.product.price * +data.quantity,
+        subtotal: cartProduct.category
+          ? +cartProduct.category.price
+          : +cartProduct.product.price,
+        total: cartProduct.category
+          ? +cartProduct.category.price * +data.quantity
+          : +cartProduct.product.price * +data.quantity,
       },
     });
 
