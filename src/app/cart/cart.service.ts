@@ -46,7 +46,7 @@ export class CartService {
         categories: data.categoryId
           ? {
               where: {
-                id: data.categoryId,
+                id: +data.categoryId,
               },
               select: {
                 id: true,
