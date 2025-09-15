@@ -103,7 +103,7 @@ export class CartService {
         category: data.categoryId
           ? {
               connect: {
-                id: data.categoryId,
+                id: +data.categoryId,
               },
             }
           : undefined,
