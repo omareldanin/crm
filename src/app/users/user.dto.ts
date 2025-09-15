@@ -55,7 +55,7 @@ export class UpdateUserDto {
   name?: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   avatar?: string;
 
   @IsOptional()

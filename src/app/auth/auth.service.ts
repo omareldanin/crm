@@ -17,12 +17,6 @@ export class AuthService {
     let user = await this.usersService.findOne({
       phone: phone,
     });
-    console.log(
-      bcrypt.compareSync(
-        password + (env.PASSWORD_SALT as string),
-        user.password
-      )
-    );
 
     if (!user) {
       throw new UnauthorizedException("خطأ في البيانات , اعد المحاوله");

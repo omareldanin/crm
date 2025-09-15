@@ -220,6 +220,13 @@ export class UsersService {
   }
 
   async updateProfile(id: number, data: UpdateUserDto): Promise<User> {
+    if (data.phone) {
+      const existing = await this.prisma.user.findUnique({
+        where: { phone: data.phone },
+      });
+      if (existing && +existing.id !== id)
+        throw new BadRequestException("رقم الهاتف موجود مسبقا");
+    }
     const user = await this.prisma.user.update({
       where: {
         id: id,
