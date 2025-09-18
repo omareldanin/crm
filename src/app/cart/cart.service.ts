@@ -128,6 +128,9 @@ export class CartService {
         subtotal: true,
         quantity: true,
         products: {
+          where: {
+            ordered: false,
+          },
           select: {
             id: true,
             total: true,

@@ -50,7 +50,7 @@ export class UsersService {
       await this.prisma.delivery.create({
         data: { user: { connect: { id: user.id } } },
       });
-    } else if (dto.role === "ADMIN") {
+    } else if (dto.role === "ADMIN" || dto.role === "ADMIN_ASSISTANT") {
       await this.prisma.admin.create({
         data: {
           permissions: dto.permissions,

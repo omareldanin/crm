@@ -29,6 +29,12 @@ enum UserRole {
   DELIVERY
 }
 
+enum OrderStatus {
+  PROSSESING
+  WITH_DELIVERY
+  DELEVERIED
+}
+
 enum NotificationTopic {
   ADMIN
   ADMIN_ASSISTANT
@@ -50,6 +56,7 @@ model User {
   role              UserRole
   notifications     Notification[]
   products          Product[]
+  deletedOrders     Order[]
   deleted           Boolean         @default(false)
   active           Boolean         @default(false)
   deletedAt         DateTime?
@@ -96,14 +103,15 @@ model ProductCategory{
 }
 
 model Delivery {
-  id     Int     @id @default(autoincrement())
-  online Boolean @default(false)
-
+  id     Int     @id 
+  online Boolean @default(false)  
+  orders Order[]
+  transactions    Transaction[]
   user User @relation(fields: [id], references: [id], onDelete: Cascade)
 }
 
 model Admin {
-  id              Int               @id @default(autoincrement())
+  id              Int               @id 
   permissions     Permissions[]
   user            User              @relation(fields: [id], references: [id], onDelete: Cascade)
 }
@@ -113,6 +121,8 @@ model Vendor {
   address           String?
   longitudes        String?
   latitude          String?
+  orders            Order[]
+  transactions    Transaction[]
   user              User         @relation(fields: [id], references: [id], onDelete: Cascade)
   //-------------------------------------------------------------------------------
 }
@@ -164,7 +174,40 @@ model CartProduct {
   // --- OTHER ---------------------------------------------------------------------//
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
-  // Order   Order? @relation(fields: [orderId], references: [id])
-  // orderId Int?
+  Order   Order? @relation(fields: [orderId], references: [id])
+  orderId Int?
 }
 
+model Order{
+  id              Int             @id @default(autoincrement())
+  total           Float           @default(0)
+  quantity  Int                   @default(0)
+  paidAmount      Float           @default(0)
+  notes           String?
+  status          OrderStatus     @default(PROSSESING)
+  products        CartProduct[]
+  deliveryId      Int?
+  delivery        Delivery?       @relation(fields: [deliveryId], references: [id])
+  vendorId        Int?
+  vendor          Vendor?         @relation(fields: [vendorId], references: [id])
+  deleted         Boolean?        @default(false)
+  deletedById     Int?
+  deletedBy       User?         @relation(fields: [deletedById], references: [id])
+  // --- OTHER ---------------------------------------------------------------------//
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model Transaction{
+  id              Int      @id @default(autoincrement())
+  paidAmount      Float    @default(0)
+  confirmed       Boolean   @default(false)
+  vendorId        Int?
+  vendor          Vendor?     @relation(fields: [vendorId], references: [id])
+  deliveryId      Int?
+  delivery        Delivery?     @relation(fields: [deliveryId], references: [id])
+
+  // --- OTHER ---------------------------------------------------------------------//
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}

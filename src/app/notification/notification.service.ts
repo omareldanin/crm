@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { Notification, NotificationTopic, UserRole } from '@prisma/client';
-import { PrismaService } from 'src/prisma/prisma.service';
-import admin from 'firebase-admin';
-import { env } from 'src/config';
+import { Injectable } from "@nestjs/common";
+import { Notification, NotificationTopic, UserRole } from "@prisma/client";
+import { PrismaService } from "src/prisma/prisma.service";
+import admin from "firebase-admin";
+import { env } from "src/config";
 
 admin.initializeApp({
   credential: admin.credential.cert({
     projectId: env.FIREBASE_PROJECT_ID,
-    privateKey: env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    privateKey: env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
     clientEmail: env.FIREBASE_CLIENT_EMAIL,
   }),
 });
@@ -20,60 +20,70 @@ export class NotificationService {
     title: string;
     content: string;
     topic: NotificationTopic | undefined;
-    userId: number | undefined;
-  }): Promise<Notification> {
-    let message;
+    userId?: number | undefined;
+  }) {
+    let tokens = [];
+    let ids = [];
 
-    if (data.topic) {
-      message = {
-        notification: {
-          title: data.title,
-          body: data.content,
+    if (data.topic === "ALL") {
+      const users = await this.prisma.user.findMany({
+        where: { deleted: false, fcm: { not: null } },
+        select: {
+          id: true,
+          fcm: true,
         },
-        topic: data.topic.toLowerCase(),
-      };
+      });
+      tokens = users.map((user) => user.fcm);
+      ids = users.map((user) => user.id);
+    } else if (data.topic) {
+      const users = await this.prisma.user.findMany({
+        where: { deleted: false, fcm: { not: null }, role: data.topic },
+        select: {
+          id: true,
+          fcm: true,
+        },
+      });
+      tokens = users.map((user) => user.fcm);
+      ids = users.map((user) => user.id);
     } else {
       const user = await this.prisma.user.findUnique({
         where: {
           id: +data.userId,
         },
         select: {
+          id: true,
           fcm: true,
         },
       });
-      message = {
-        notification: {
-          title: data.title,
-          body: data.content,
-        },
-        token: user.fcm ? user.fcm : 'fff4',
-      };
+      ids = [user.id];
+      tokens = [user.fcm || ""];
     }
 
     await admin
       .messaging()
-      .send(message)
+      .sendEachForMulticast({
+        notification: {
+          title: data.title,
+          body: data.content,
+        },
+        tokens: tokens,
+      })
       .then((response) => {
-        console.log('Successfully sent message to token:', response);
+        console.log("Successfully sent message to token:", response);
       })
       .catch((error) => {
-        console.log('Error sending message to token:', error);
+        console.log("Error sending message to token:", error);
       });
 
-    return await this.prisma.notification.create({
-      data: {
+    const results = await this.prisma.notification.createMany({
+      data: ids.map((id) => ({
         title: data.title,
         content: data.content,
-        topic: data.topic,
-        user: data?.userId
-          ? {
-              connect: {
-                id: +data.userId,
-              },
-            }
-          : undefined,
-      },
+        userId: id,
+      })),
     });
+
+    return { message: "success", results };
   }
 
   async getUserNotifications(data: {
@@ -93,25 +103,17 @@ export class NotificationService {
     const [results, total] = await Promise.all([
       this.prisma.notification.findMany({
         where: {
-          OR: [
-            { userId: data.userId },
-            { topic: data.role as NotificationTopic },
-            { topic: 'ALL' },
-          ],
+          userId: data.userId,
         },
         orderBy: {
-          createdAt: 'desc',
+          createdAt: "desc",
         },
         skip: (page - 1) * +pageSize,
         take: +pageSize,
       }),
       this.prisma.notification.count({
         where: {
-          OR: [
-            { userId: data.userId },
-            { topic: data.role as NotificationTopic },
-            { topic: 'ALL' },
-          ],
+          userId: data.userId,
         },
       }),
     ]);
@@ -145,6 +147,6 @@ export class NotificationService {
         seen: true,
       },
     });
-    return { message: 'success' };
+    return { message: "success" };
   }
 }

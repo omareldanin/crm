@@ -15,7 +15,7 @@ export class CreateUserDto {
   name?: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   avatar?: string;
 
   @IsOptional()
@@ -37,7 +37,7 @@ export class CreateUserDto {
   @IsEnum(UserRole)
   role: UserRole;
 
-  @IsEnum(Permissions)
+  @IsEnum(Permissions, { each: true })
   permissions: Permissions[];
 }
 

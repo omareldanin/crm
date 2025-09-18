@@ -110,6 +110,7 @@ export class ProductService {
           quantity: true,
           image: true,
           createdAt: true,
+          available: true,
           createdBy: {
             select: {
               id: true,

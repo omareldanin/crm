@@ -11,6 +11,8 @@ import { NotificationModule } from "./app/notification/notification.module";
 import { ChatGateway } from "./order.gateway";
 import { ProductModule } from "./app/product/product.module";
 import { CartModule } from "./app/cart/cart.module";
+import { OrderController } from "./app/order/order.controller";
+import { OrderModule } from "./app/order/order.module";
 
 @Module({
   imports: [
@@ -23,6 +25,7 @@ import { CartModule } from "./app/cart/cart.module";
     NotificationModule,
     ProductModule,
     CartModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [AppService, ChatGateway],
