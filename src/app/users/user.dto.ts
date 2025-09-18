@@ -37,6 +37,7 @@ export class CreateUserDto {
   @IsEnum(UserRole)
   role: UserRole;
 
+  @IsOptional()
   @IsEnum(Permissions, { each: true })
   permissions: Permissions[];
 }
@@ -77,4 +78,8 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   longitudes?: string;
+
+  @IsOptional()
+  @IsEnum(Permissions, { each: true })
+  permissions: Permissions[];
 }

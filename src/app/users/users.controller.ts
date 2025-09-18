@@ -74,8 +74,7 @@ export class UsersController {
   async updateUser(
     @Param("id") id: number,
     @UploadedFile() file: Express.Multer.File,
-    @Body() data: UpdateUserDto,
-    @Req() req
+    @Body() data: UpdateUserDto
   ) {
     if (file) {
       data.avatar = "uploads/" + file.filename; // or save full path if you want
