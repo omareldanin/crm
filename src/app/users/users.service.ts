@@ -110,6 +110,7 @@ export class UsersService {
           role: filters.role,
           name: filters.name ? { contains: filters.name } : undefined,
           phone: filters.phone ? { contains: filters.phone } : undefined,
+          deleted: false,
         },
         select: {
           id: true,
@@ -159,13 +160,9 @@ export class UsersService {
   }
 
   async deleteUser(id: number) {
-    await this.prisma.user.update({
+    await this.prisma.user.delete({
       where: {
         id: +id,
-      },
-      data: {
-        deleted: true,
-        deletedAt: new Date(),
       },
     });
 
@@ -236,6 +233,53 @@ export class UsersService {
         phone: data.phone,
         avatar: data.avatar,
         fcm: data.fcm,
+        vendor: {
+          update: {
+            data: {
+              address: data.address || undefined,
+              latitude: data.latitude || undefined,
+              longitudes: data.longitudes || undefined,
+            },
+          },
+        },
+        delivery: {
+          update: {
+            data: {
+              online:
+                data.online === "true"
+                  ? true
+                  : data.online === "false"
+                    ? false
+                    : undefined,
+            },
+          },
+        },
+      },
+    });
+
+    return user;
+  }
+
+  async updateUser(id: number, data: UpdateUserDto) {
+    if (data.phone) {
+      const existing = await this.prisma.user.findUnique({
+        where: { phone: data.phone },
+      });
+      if (existing && +existing.id !== id)
+        throw new BadRequestException("رقم الهاتف موجود مسبقا");
+    }
+    const user = await this.prisma.user.update({
+      where: {
+        id: id,
+      },
+      data: {
+        name: data.name,
+        phone: data.phone,
+        avatar: data.avatar,
+        fcm: data.fcm,
+        password: data.password
+          ? bcrypt.hashSync(data.password + (env.PASSWORD_SALT as string), 12)
+          : undefined,
         vendor: {
           update: {
             data: {

@@ -148,11 +148,58 @@ export class OrderService {
     return { message: "success", order };
   }
 
-  async update(id: number, data: Prisma.OrderUpdateInput) {
-    return this.prisma.order.update({
+  async update(
+    id: number,
+    data: {
+      paidAmount?: number;
+      status?: OrderStatus;
+      deliveryId?: number;
+    }
+  ) {
+    const order = await this.getOne(id);
+
+    const updatedOrder = await this.prisma.order.update({
       where: { id },
       data,
     });
+
+    if (data.status && order.order.status !== data.status) {
+      await this.notification.sendNotification({
+        title: "تحديث للطلب",
+        content: `تم تغيير حاله الطلب رقم ${order.order.id} إلي ${data.status === "DELEVERIED" ? "تم التسليم" : data.status === "WITH_DELIVERY" ? "بالطريق مع المندوب" : "قيد المعالجه"}`,
+        topic: "ADMIN_ASSISTANT",
+      });
+      await this.notification.sendNotification({
+        title: "تحديث للطلب",
+        content: `تم تغيير حاله الطلب رقم ${order.order.id} إلي ${data.status === "DELEVERIED" ? "تم التسليم" : data.status === "WITH_DELIVERY" ? "بالطريق مع المندوب" : "قيد المعالجه"}`,
+        topic: "ADMIN",
+      });
+      await this.notification.sendNotification({
+        title: "تحديث للطلب",
+        content: `تم تغيير حاله الطلب رقم ${order.order.id} إلي ${data.status === "DELEVERIED" ? "تم التسليم" : data.status === "WITH_DELIVERY" ? "بالطريق مع المندوب" : "قيد المعالجه"}`,
+        userId: order.order.vendor.id,
+      });
+    }
+    if (data.paidAmount) {
+      await this.prisma.transaction.create({
+        data: {
+          paidAmount: +data.paidAmount,
+          confirmed: false,
+          delivery: {
+            connect: {
+              id: order.order.delivery.id,
+            },
+          },
+          vendor: {
+            connect: {
+              id: order.order.vendor.id,
+            },
+          },
+        },
+      });
+    }
+
+    return { message: "success", updatedOrder };
   }
 
   async delete(id: number, userId: number) {
@@ -168,5 +215,35 @@ export class OrderService {
       },
     });
     return { message: "success" };
+  }
+
+  async getOrderStatistics(vendorId?: number) {
+    const result = await this.prisma.order.aggregate({
+      _count: { id: true },
+      _sum: { total: true },
+      where: {
+        vendorId: vendorId ? vendorId : undefined,
+      },
+    });
+
+    const statuses = await this.prisma.order.groupBy({
+      by: ["status"],
+      _count: { status: true },
+      where: {
+        vendorId: vendorId ? vendorId : undefined,
+      },
+    });
+
+    return {
+      totalOrders: result._count?.id || 0,
+      total: result._sum?.total || 0,
+      statusCounts: statuses.reduce(
+        (acc, s) => {
+          acc[s.status] = s._count.status;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+    };
   }
 }

@@ -76,7 +76,12 @@ export class OrderController {
   @Patch(":id")
   async update(
     @Param("id", ParseIntPipe) id: number,
-    @Body() data: Prisma.OrderUpdateInput
+    @Body()
+    data: {
+      paidAmount?: number;
+      status?: OrderStatus;
+      deliveryId?: number;
+    }
   ) {
     return this.orderService.update(id, data);
   }
@@ -86,5 +91,15 @@ export class OrderController {
   async delete(@Param("id", ParseIntPipe) id: number, @Req() req) {
     const loggedInUser = req.user as LoggedInUserType;
     return this.orderService.delete(id, loggedInUser.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get("statistics")
+  async getStatistics(@Req() req) {
+    const loggedInUser = req.user as LoggedInUserType;
+
+    return this.orderService.getOrderStatistics(
+      loggedInUser.role === "VENDOR" ? loggedInUser.id : undefined
+    );
   }
 }

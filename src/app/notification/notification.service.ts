@@ -19,7 +19,7 @@ export class NotificationService {
   async sendNotification(data: {
     title: string;
     content: string;
-    topic: NotificationTopic | undefined;
+    topic?: NotificationTopic | undefined;
     userId?: number | undefined;
   }) {
     let tokens = [];

@@ -67,6 +67,25 @@ export class UsersController {
     };
   }
 
+  //update user profile --------------------------
+  @UseGuards(JwtAuthGuard)
+  @UploadImageInterceptor("avatar")
+  @Patch("/:id")
+  async updateUser(
+    @Param("id") id: number,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() data: UpdateUserDto,
+    @Req() req
+  ) {
+    if (file) {
+      data.avatar = "uploads/" + file.filename; // or save full path if you want
+    }
+    const user = await this.userService.updateProfile(+id, data);
+    return {
+      message: "success",
+      user: { ...user, password: null },
+    };
+  }
   @UseGuards(JwtAuthGuard)
   @Get("/getAll")
   getAll(@Query() filters: any) {
