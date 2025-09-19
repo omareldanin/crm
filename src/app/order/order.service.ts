@@ -222,7 +222,8 @@ export class OrderService {
       _count: { id: true },
       _sum: { total: true },
       where: {
-        vendorId: vendorId ? vendorId : undefined,
+        vendorId: vendorId ? +vendorId : undefined,
+        deleted: false,
       },
     });
 
@@ -230,7 +231,8 @@ export class OrderService {
       by: ["status"],
       _count: { status: true },
       where: {
-        vendorId: vendorId ? vendorId : undefined,
+        vendorId: vendorId ? +vendorId : undefined,
+        deleted: false,
       },
     });
 

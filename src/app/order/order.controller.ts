@@ -54,6 +54,16 @@ export class OrderController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get("/statistics")
+  async getStatistics(@Req() req) {
+    const loggedInUser = req.user as LoggedInUserType;
+
+    return this.orderService.getOrderStatistics(
+      loggedInUser.role === "VENDOR" ? loggedInUser.id : undefined
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get("/:id")
   async getOne(@Param("id", ParseIntPipe) id: number) {
     return this.orderService.getOne(id);
@@ -91,15 +101,5 @@ export class OrderController {
   async delete(@Param("id", ParseIntPipe) id: number, @Req() req) {
     const loggedInUser = req.user as LoggedInUserType;
     return this.orderService.delete(id, loggedInUser.id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get("statistics")
-  async getStatistics(@Req() req) {
-    const loggedInUser = req.user as LoggedInUserType;
-
-    return this.orderService.getOrderStatistics(
-      loggedInUser.role === "VENDOR" ? loggedInUser.id : undefined
-    );
   }
 }
