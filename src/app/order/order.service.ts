@@ -4,6 +4,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { orderSelect, orderSelectReform } from "./order.response";
 import { CartService } from "../cart/cart.service";
 import { NotificationService } from "../notification/notification.service";
+import { NotFoundError } from "rxjs";
 
 @Injectable()
 export class OrderService {
@@ -68,10 +69,12 @@ export class OrderService {
 
   async getOne(id: number) {
     const order = await this.prisma.order.findUnique({
-      where: { id },
+      where: { id, deleted: false },
       select: orderSelect,
     });
-
+    if (!order) {
+      throw new BadRequestException("لم يتم العثور علي الطلب");
+    }
     return {
       order: orderSelectReform(order),
     };
