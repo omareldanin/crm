@@ -236,16 +236,26 @@ export class OrderService {
       },
     });
 
+    // نعمل object مبدئي فيه كل statuses بالقيمة 0
+    const statusCounts: Record<string, number> = Object.values(
+      OrderStatus
+    ).reduce(
+      (acc, status) => {
+        acc[status] = 0;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    // نحدّث القيم من نتائج DB
+    statuses.forEach((s) => {
+      statusCounts[s.status] = s._count.status;
+    });
+
     return {
       totalOrders: result._count?.id || 0,
       total: result._sum?.total || 0,
-      statusCounts: statuses.reduce(
-        (acc, s) => {
-          acc[s.status] = s._count.status;
-          return acc;
-        },
-        {} as Record<string, number>
-      ),
+      statusCounts,
     };
   }
 }
