@@ -66,7 +66,7 @@ export class updateProductDto {
   })
   @IsBoolean()
   @IsOptional()
-  available?: boolean = true;
+  available?: boolean;
 
   @Type(() => Number)
   @IsNumber()
