@@ -59,13 +59,10 @@ export class OrderService {
     ]);
 
     return {
-      data: data.map((order) => orderSelectReform(order)),
-      pagination: {
-        total,
-        page,
-        size,
-        totalPages: Math.ceil(total / size),
-      },
+      count: total,
+      totalPages: Math.ceil(total / size),
+      page,
+      results: data.map((order) => orderSelectReform(order)),
     };
   }
 
