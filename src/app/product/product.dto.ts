@@ -40,6 +40,36 @@ export class CreateProductDto {
   quantity?: number = 0;
 }
 
+export class updateProductDto {
+  @IsString()
+  @IsOptional()
+  name: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsString()
+  @IsOptional()
+  image?: string;
+
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsPositive()
+  @IsOptional()
+  price?: number;
+
+  @Transform(({ value }) => value === "true" || value === true) // 👈 string → boolean
+  @IsBoolean()
+  @IsOptional()
+  available?: boolean = true;
+
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  quantity?: number = 0;
+}
+
 export class CreateCategoryDto {
   @IsString()
   @IsNotEmpty()

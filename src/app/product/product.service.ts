@@ -5,6 +5,7 @@ import {
   CreateCategoryDto,
   CreateProductDto,
   UpdateCategoryDto,
+  updateProductDto,
 } from "./product.dto";
 
 @Injectable()
@@ -29,7 +30,7 @@ export class ProductService {
     });
   }
 
-  async update(id: number, data: Prisma.ProductUpdateInput) {
+  async update(id: number, data: updateProductDto) {
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product)
       throw new NotFoundException(`Product with id ${id} not found`);

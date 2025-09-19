@@ -21,6 +21,7 @@ import {
   CreateCategoryDto,
   CreateProductDto,
   UpdateCategoryDto,
+  updateProductDto,
 } from "./product.dto";
 import { LoggedInUserType } from "../auth/auth.dto";
 
@@ -54,7 +55,7 @@ export class ProductController {
   @Patch("/edit/:id")
   async update(
     @Param("id", ParseIntPipe) id: number,
-    @Body() data: Prisma.ProductUpdateInput,
+    @Body() data: updateProductDto,
     @UploadedFile() file: Express.Multer.File
   ) {
     if (file) {
