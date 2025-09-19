@@ -93,7 +93,6 @@ export class ProductController {
     });
   }
 
-  // ----------------- CATEGORY ENDPOINTS -----------------
   @UseGuards(JwtAuthGuard)
   @UploadImageInterceptor("image")
   @Post("/categories")

@@ -29,7 +29,11 @@ export class CreateProductDto {
   @IsOptional()
   price?: number;
 
-  @Transform(({ value }) => value === "true" || value === true) // 👈 string → boolean
+  @Transform(({ value }) => {
+    if (value === "true" || value === true) return true;
+    if (value === "false" || value === false) return false;
+    return undefined;
+  })
   @IsBoolean()
   @IsOptional()
   available?: boolean = true;
@@ -59,19 +63,14 @@ export class updateProductDto {
   @IsOptional()
   price?: number;
 
-  @Transform(({ value }) => {
-    if (value === "true" || value === true) return true;
-    if (value === "false" || value === false) return false;
-    return undefined;
-  })
-  @IsBoolean()
+  @IsString()
   @IsOptional()
-  available?: boolean;
+  available?: string;
 
   @Type(() => Number)
   @IsNumber()
   @IsOptional()
-  quantity?: number = 0;
+  quantity?: number;
 }
 
 export class CreateCategoryDto {

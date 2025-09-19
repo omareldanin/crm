@@ -36,7 +36,15 @@ export class ProductService {
       throw new NotFoundException(`Product with id ${id} not found`);
     return this.prisma.product.update({
       where: { id },
-      data,
+      data: {
+        ...data,
+        available:
+          data.available === "true"
+            ? true
+            : data.available === "false"
+              ? false
+              : undefined,
+      },
     });
   }
 
