@@ -5,6 +5,7 @@ import { orderSelect, orderSelectReform } from "./order.response";
 import { CartService } from "../cart/cart.service";
 import { NotificationService } from "../notification/notification.service";
 import { NotFoundError } from "rxjs";
+import { startOfMonth, subMonths } from "date-fns";
 
 @Injectable()
 export class OrderService {
@@ -89,12 +90,24 @@ export class OrderService {
       throw new BadRequestException("لا يوجد منتجات في السله");
     }
 
-    cart.products.forEach((product) => {
+    cart.products.forEach(async (product) => {
       if (product.category) {
         total += +product.category.price * +product.quantity;
       } else {
         total += +product.product.price * +product.quantity;
       }
+
+      await this.prisma.product.update({
+        where: { id: product.id },
+        data: {
+          quantity: {
+            decrement: product.quantity,
+          },
+          orders: {
+            increment: product.quantity,
+          },
+        },
+      });
     });
 
     const order = await this.prisma.order.create({
@@ -221,6 +234,43 @@ export class OrderService {
     return { message: "success" };
   }
 
+  async getMonthlySales() {
+    // تاريخ أول يوم من الشهر الحالي ناقص 11 شهر (يعني آخر 12 شهر)
+    const startDate = startOfMonth(subMonths(new Date(), 11));
+
+    const result = await this.prisma.order.groupBy({
+      by: ["createdAt"], // Prisma بيجبرك تختار حقل date
+      where: {
+        createdAt: {
+          gte: startDate,
+        },
+        deleted: false,
+      },
+      _sum: {
+        total: true, // إجمالي المدفوع
+        quantity: true,
+      },
+    });
+
+    // ⚠️ groupBy بيرجعك createdAt كامل (بالثواني)، فلازم نعمل map لتجميعه حسب الشهر
+    const monthly = result.reduce(
+      (acc, order) => {
+        const monthKey = `${order.createdAt.getFullYear()}-${order.createdAt.getMonth() + 1}`;
+
+        if (!acc[monthKey]) {
+          acc[monthKey] = { total: 0, totalQty: 0 };
+        }
+        acc[monthKey].total += order._sum.total || 0;
+        acc[monthKey].totalQty += order._sum.quantity || 0;
+
+        return acc;
+      },
+      {} as Record<string, { total: number; totalQty: number }>
+    );
+
+    return monthly;
+  }
+
   async getOrderStatistics(vendorId?: number, deliveryId?: number) {
     const result = await this.prisma.order.aggregate({
       _count: { id: true },
@@ -230,6 +280,34 @@ export class OrderService {
         deliveryId: deliveryId ? +deliveryId : undefined,
         deleted: false,
       },
+    });
+
+    const productsCount = await this.prisma.product.aggregate({
+      _count: { id: true },
+    });
+
+    const products = await this.prisma.product.findMany({
+      select: { name: true, orders: true },
+    });
+
+    const productsHasQuantity = await this.prisma.product.aggregate({
+      _count: { id: true },
+      where: { quantity: { gt: 0 } },
+    });
+
+    const productsNotHasQuantity = await this.prisma.product.aggregate({
+      _count: { id: true },
+      where: { quantity: 0 },
+    });
+
+    const vendorCount = await this.prisma.user.aggregate({
+      _count: { id: true },
+      where: { role: "VENDOR", deleted: false },
+    });
+
+    const activeDeliveries = await this.prisma.delivery.aggregate({
+      _count: { id: true },
+      where: { online: true, user: { deleted: false } },
     });
 
     const totalPaid = await this.prisma.transaction.aggregate({
@@ -275,15 +353,25 @@ export class OrderService {
       statusCounts[s.status] = s._count.status;
     });
 
+    const monthlySales = await this.getMonthlySales();
     return {
+      productsCount: productsCount._count.id || 0,
+      productsHasQuantity: productsHasQuantity._count.id || 0,
+      productsNotHasQuantity: productsNotHasQuantity._count.id || 0,
       totalOrders: result._count?.id || 0,
+      vendorCount: vendorCount._count?.id || 0,
+      activeDeliveries: activeDeliveries._count?.id || 0,
       total: result._sum?.total || 0,
+      totalNotPaid:
+        (result._sum?.total || 0) - (totalPaid._sum?.paidAmount || 0),
       totalPaid: totalPaid._sum?.paidAmount || 0,
       totalNotConfirmed: notConfirmed._sum?.paidAmount || 0,
       totalConfirmed:
         (totalPaid._sum?.paidAmount || 0) -
         (notConfirmed._sum?.paidAmount || 0),
+      monthlySales,
       statusCounts,
+      products,
     };
   }
 }
