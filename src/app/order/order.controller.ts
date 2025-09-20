@@ -55,11 +55,24 @@ export class OrderController {
 
   @UseGuards(JwtAuthGuard)
   @Get("/statistics")
-  async getStatistics(@Req() req) {
+  async getStatistics(
+    @Req() req,
+    @Query("vendorId") vendorId?: string,
+    @Query("deliveryId") deliveryId?: string
+  ) {
     const loggedInUser = req.user as LoggedInUserType;
 
     return this.orderService.getOrderStatistics(
-      loggedInUser.role === "VENDOR" ? loggedInUser.id : undefined
+      loggedInUser.role === "VENDOR"
+        ? loggedInUser.id
+        : vendorId
+          ? +vendorId
+          : undefined,
+      loggedInUser.role === "DELIVERY"
+        ? loggedInUser.id
+        : deliveryId
+          ? +deliveryId
+          : undefined
     );
   }
 
@@ -83,6 +96,7 @@ export class OrderController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(NoFilesInterceptor())
   @Patch(":id")
   async update(
     @Param("id", ParseIntPipe) id: number,

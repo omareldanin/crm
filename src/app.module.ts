@@ -11,8 +11,10 @@ import { NotificationModule } from "./app/notification/notification.module";
 import { ChatGateway } from "./order.gateway";
 import { ProductModule } from "./app/product/product.module";
 import { CartModule } from "./app/cart/cart.module";
-import { OrderController } from "./app/order/order.controller";
 import { OrderModule } from "./app/order/order.module";
+import { TransactionController } from "./app/transaction/transaction.controller";
+import { TransactionService } from "./app/transaction/transaction.service";
+import { TransactionModule } from "./app/transaction/transaction.module";
 
 @Module({
   imports: [
@@ -26,8 +28,9 @@ import { OrderModule } from "./app/order/order.module";
     ProductModule,
     CartModule,
     OrderModule,
+    TransactionModule,
   ],
-  controllers: [AppController],
-  providers: [AppService, ChatGateway],
+  controllers: [AppController, TransactionController],
+  providers: [AppService, ChatGateway, TransactionService],
 })
 export class AppModule {}

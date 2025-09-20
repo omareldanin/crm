@@ -160,7 +160,11 @@ export class OrderService {
 
     const updatedOrder = await this.prisma.order.update({
       where: { id },
-      data,
+      data: {
+        paidAmount: data.paidAmount ? +data.paidAmount : undefined,
+        status: data.status ? data.status : undefined,
+        deliveryId: data.deliveryId ? +data.deliveryId : undefined,
+      },
     });
 
     if (data.status && order.order.status !== data.status) {
@@ -217,13 +221,33 @@ export class OrderService {
     return { message: "success" };
   }
 
-  async getOrderStatistics(vendorId?: number) {
+  async getOrderStatistics(vendorId?: number, deliveryId?: number) {
     const result = await this.prisma.order.aggregate({
       _count: { id: true },
       _sum: { total: true },
       where: {
         vendorId: vendorId ? +vendorId : undefined,
+        deliveryId: deliveryId ? +deliveryId : undefined,
         deleted: false,
+      },
+    });
+
+    const totalPaid = await this.prisma.transaction.aggregate({
+      _count: { id: true },
+      _sum: { paidAmount: true },
+      where: {
+        vendorId: vendorId ? +vendorId : undefined,
+        deliveryId: deliveryId ? +deliveryId : undefined,
+      },
+    });
+
+    const notConfirmed = await this.prisma.transaction.aggregate({
+      _count: { id: true },
+      _sum: { paidAmount: true },
+      where: {
+        vendorId: vendorId ? +vendorId : undefined,
+        deliveryId: deliveryId ? +deliveryId : undefined,
+        confirmed: false,
       },
     });
 
@@ -232,11 +256,11 @@ export class OrderService {
       _count: { status: true },
       where: {
         vendorId: vendorId ? +vendorId : undefined,
+        deliveryId: deliveryId ? +deliveryId : undefined,
         deleted: false,
       },
     });
 
-    // نعمل object مبدئي فيه كل statuses بالقيمة 0
     const statusCounts: Record<string, number> = Object.values(
       OrderStatus
     ).reduce(
@@ -247,7 +271,6 @@ export class OrderService {
       {} as Record<string, number>
     );
 
-    // نحدّث القيم من نتائج DB
     statuses.forEach((s) => {
       statusCounts[s.status] = s._count.status;
     });
@@ -255,6 +278,11 @@ export class OrderService {
     return {
       totalOrders: result._count?.id || 0,
       total: result._sum?.total || 0,
+      totalPaid: totalPaid._sum?.paidAmount || 0,
+      totalNotConfirmed: notConfirmed._sum?.paidAmount || 0,
+      totalConfirmed:
+        (totalPaid._sum?.paidAmount || 0) -
+        (notConfirmed._sum?.paidAmount || 0),
       statusCounts,
     };
   }
