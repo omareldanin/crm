@@ -93,21 +93,36 @@ export class OrderService {
     cart.products.forEach(async (product) => {
       if (product.category) {
         total += +product.category.price * +product.quantity;
+        await this.prisma.productCategory.update({
+          where: { id: product.category.id },
+          data: {
+            quantity: {
+              decrement: product.quantity,
+            },
+          },
+        });
+        await this.prisma.product.update({
+          where: { id: product.product.id },
+          data: {
+            orders: {
+              increment: product.quantity,
+            },
+          },
+        });
       } else {
         total += +product.product.price * +product.quantity;
+        await this.prisma.product.update({
+          where: { id: product.product.id },
+          data: {
+            quantity: {
+              decrement: product.quantity,
+            },
+            orders: {
+              increment: product.quantity,
+            },
+          },
+        });
       }
-
-      await this.prisma.product.update({
-        where: { id: product.id },
-        data: {
-          quantity: {
-            decrement: product.quantity,
-          },
-          orders: {
-            increment: product.quantity,
-          },
-        },
-      });
     });
 
     const order = await this.prisma.order.create({
