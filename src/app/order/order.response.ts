@@ -7,6 +7,7 @@ export const orderSelect = {
   notes: true,
   status: true,
   quantity: true,
+  createdAt: true,
   delivery: {
     select: {
       user: {
