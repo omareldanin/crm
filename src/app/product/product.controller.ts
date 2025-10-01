@@ -43,6 +43,10 @@ export class ProductController {
       data.image = "uploads/" + file.filename;
     }
 
+    if (data.categories && typeof data.categories === "string") {
+      data.categories = JSON.parse(data.categories);
+    }
+
     const product = await this.productService.create({
       data,
       userid: loggedInUser.id,

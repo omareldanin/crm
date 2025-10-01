@@ -42,6 +42,10 @@ export class CreateProductDto {
   @IsNumber()
   @IsOptional()
   quantity?: number = 0;
+
+  @IsJSON()
+  @IsOptional()
+  categories?: { name: string; price: number; quantity: number }[];
 }
 
 export class updateProductDto {

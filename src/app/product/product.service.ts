@@ -13,7 +13,7 @@ export class ProductService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: { data: CreateProductDto; userid: number }) {
-    return this.prisma.product.create({
+    const product = await this.prisma.product.create({
       data: {
         name: data.data.name,
         price: data.data.price || 0,
@@ -27,6 +27,22 @@ export class ProductService {
           },
         },
       },
+    });
+
+    if (data.data.categories && data.data.categories.length > 0) {
+      await this.prisma.productCategory.createMany({
+        data: data.data.categories.map((cat) => ({
+          name: cat.name,
+          price: cat.price,
+          quantity: cat.quantity,
+          productId: product.id,
+        })),
+      });
+    }
+
+    return this.prisma.product.findUnique({
+      where: { id: product.id },
+      include: { categories: true },
     });
   }
 
