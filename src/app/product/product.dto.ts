@@ -75,6 +75,15 @@ export class updateProductDto {
   @IsNumber()
   @IsOptional()
   quantity?: number;
+
+  @IsJSON()
+  @IsOptional()
+  categories?: {
+    id: number | undefined;
+    name: string;
+    price: number;
+    quantity: number;
+  }[];
 }
 
 export class CreateCategoryDto {

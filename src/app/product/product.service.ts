@@ -46,14 +46,16 @@ export class ProductService {
     });
   }
 
-  async update(id: number, data: updateProductDto) {
-    const product = await this.prisma.product.findUnique({ where: { id } });
-    if (!product)
-      throw new NotFoundException(`Product with id ${id} not found`);
-    return this.prisma.product.update({
-      where: { id },
+  async updateWithUpsert(id: number, data: updateProductDto) {
+    // 1- نعدل بيانات المنتج نفسه
+    const product = await this.prisma.product.update({
+      where: { id: id },
       data: {
-        ...data,
+        name: data.name,
+        price: data.price || 0,
+        quantity: +data.quantity || 0,
+        image: data.image || undefined,
+        description: data.description,
         available:
           data.available === "true"
             ? true
@@ -61,6 +63,53 @@ export class ProductService {
               ? false
               : undefined,
       },
+    });
+
+    // 2- IDs اللي جاية من الـ frontend
+    const incomingIds =
+      data.categories?.filter((c) => c.id)?.map((c) => c.id) || [];
+
+    // 3- نمسح أي كاتيجوري مش موجودة في incomingIds
+    await this.prisma.productCategory.deleteMany({
+      where: {
+        productId: product.id,
+        NOT: {
+          id: { in: incomingIds },
+        },
+      },
+    });
+
+    // 4- نعمل upsert لكل كاتيجوري
+    if (data.categories && data.categories.length > 0) {
+      for (const cat of data.categories) {
+        if (cat.id) {
+          // Update موجود
+          await this.prisma.productCategory.update({
+            where: { id: cat.id },
+            data: {
+              name: cat.name,
+              price: cat.price,
+              quantity: cat.quantity,
+            },
+          });
+        } else {
+          // Create جديد
+          await this.prisma.productCategory.create({
+            data: {
+              name: cat.name,
+              price: cat.price,
+              quantity: cat.quantity,
+              productId: product.id,
+            },
+          });
+        }
+      }
+    }
+
+    // 5- نرجع المنتج مع الكاتيجوريز
+    return this.prisma.product.findUnique({
+      where: { id: product.id },
+      include: { categories: true },
     });
   }
 

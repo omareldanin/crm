@@ -65,7 +65,12 @@ export class ProductController {
     if (file) {
       data.image = "uploads/" + file.filename;
     }
-    const product = await this.productService.update(id, data);
+
+    if (data.categories && typeof data.categories === "string") {
+      data.categories = JSON.parse(data.categories);
+    }
+
+    const product = await this.productService.updateWithUpsert(id, data);
     return { message: "success", product };
   }
 
