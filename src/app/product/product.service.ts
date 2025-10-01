@@ -105,7 +105,7 @@ export class ProductService {
       where.quantity = { lte: filters.quantity };
     }
 
-    const [items, total] = await this.prisma.$transaction([
+    let [items, total] = await this.prisma.$transaction([
       this.prisma.product.findMany({
         where,
         skip,
@@ -138,7 +138,26 @@ export class ProductService {
       }),
       this.prisma.product.count({ where }),
     ]);
-
+    items = items.map((i) => {
+      let totalQuantity = 0;
+      if (i.categories.length) {
+        i.categories.forEach((c) => {
+          totalQuantity += c.quantity;
+        });
+      } else {
+        totalQuantity = i.quantity;
+      }
+      return {
+        ...i,
+        quantity: totalQuantity,
+        status:
+          totalQuantity >= 10
+            ? "متوفر"
+            : totalQuantity <= 0
+              ? "غير متوفر"
+              : "منخفض",
+      };
+    });
     return {
       data: items,
       pagination: {
