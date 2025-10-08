@@ -7,7 +7,13 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   // ✅ Enable CORS
   app.enableCors({
-    origin: "*", // Your frontend origin (e.g. Vite dev server)
+    origin: (origin, callback) => {
+      if (!origin || origin === "null") {
+        callback(null, true);
+      } else {
+        callback(null, true);
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     credentials: true,
   });
